@@ -1,0 +1,42 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PyPotter.py",
+            "type": "python",
+            "request": "launch",
+            "program": "./PyPotter.py",
+            "args": [
+                "http://172.16.10.64:8080/?action=stream",
+                "http://hassio.mm.home:8123",
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI0ZGZkOTQxNDdlZTY0NWI5YmRlYTNlZGYzNjA4MGJjYyIsImlhdCI6MTY1ODc2NjE2NCwiZXhwIjoxOTc0MTI2MTY0fQ.46B0mMOgYtIBT5dQFPr1kGJlDSK0RQuKOJBLXHlpP38",
+                "True", // Remove Background
+                "True", // Show Windows
+                "False", // Training
+                "False" // Debug FPS to Console
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "PyPotter.py: No Windows",
+            "type": "python",
+            "request": "launch",
+            "program": "./PyPotter.py",
+            "args": [
+                "http://172.16.10.64:8080/?action=stream",
+                "http://hassio.mm.home:8123",
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI0ZGZkOTQxNDdlZTY0NWI5YmRlYTNlZGYzNjA4MGJjYyIsImlhdCI6MTY1ODc2NjE2NCwiZXhwIjoxOTc0MTI2MTY0fQ.46B0mMOgYtIBT5dQFPr1kGJlDSK0RQuKOJBLXHlpP38",
+                "True",
+                "False",
+                "False",
+                "False"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
