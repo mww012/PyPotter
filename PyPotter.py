@@ -226,10 +226,10 @@ def CheckForPattern(wandTracks, exampleFrame):
     prevTrack = wandTracks[0]
 
     for track in wandTracks:
-        x1 = prevTrack[0]
-        x2 = track[0]
-        y1 = prevTrack[1]
-        y2 = track[1]
+        x1 = int(prevTrack[0])
+        x2 = int(track[0])
+        y1 = int(prevTrack[1])
+        y2 = int(track[1])
 
         # Calculate the distance
         distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
@@ -277,7 +277,7 @@ def RemoveBackground():
     global frame, frame_no_background, IsNewFrame, IsNewFrameNoBackground
 
     fgbg = cv2.createBackgroundSubtractorMOG2()
-    t = threading.currentThread()
+    t = threading.current_thread()
     while getattr(t, "do_run", True):
         if (IsNewFrame):
             IsNewFrame = False
@@ -301,7 +301,7 @@ def CalculateThreshold():
     """
     global frame, frame_no_background, frameThresh, IsNewFrame, IsNewFrameNoBackground, IsNewFrameThreshold
 
-    t = threading.currentThread()
+    t = threading.current_thread()
     thresholdValue = 240
     while getattr(t, "do_run", True):
         if (IsRemoveBackground and IsNewFrameNoBackground) or (not IsRemoveBackground and IsNewFrame):
@@ -330,7 +330,7 @@ def ProcessData():
 
     oldFrameThresh = None
     trackedPoints = None
-    t = threading.currentThread()
+    t = threading.current_thread()
 
     while getattr(t, "do_run", True):
         if (IsNewFrameThreshold):
