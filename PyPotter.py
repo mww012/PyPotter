@@ -112,9 +112,14 @@ lk_params = dict( winSize  = (25,25),
 IsNewFrame = False
 frame = None
 
+NewFrameNoBackground = None
 IsNewFrameNoBackground = False
 frame_no_background = None
 
+NewWandFrameOutput = None
+IsNewWandFrameOutput = False
+
+NewFrameThreshold = None
 IsNewFrameThreshold = False
 frameThresh = None
 
@@ -213,7 +218,7 @@ def CheckForPattern(wandTracks, exampleFrame):
     """
     Check the given wandTracks to see if is is complete, and if it matches a trained spell
     """
-    global find_new_wands, LastSpell
+    global find_new_wands, LastSpell, NewWandFrameOutput, IsNewWandFrameOutput
 
     if (wandTracks == None or len(wandTracks) == 0):
         return
@@ -263,10 +268,10 @@ def CheckForPattern(wandTracks, exampleFrame):
         wandTracks.clear()
 
     if wand_path_frame is not None:
+        IsNewWandFrameOutput = True
         if (IsShowOutput):
             wandPathFrameWithText = AddIterationsPerSecText(wand_path_frame, outputCps.countsPerSec())
-            cv2.putText(wandPathFrameWithText, "Last Spell: " + LastSpell, (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
-            cv2.imshow("Output", wandPathFrameWithText)
+            NewWandFrameOutput = cv2.putText(wandPathFrameWithText, "Last Spell: " + LastSpell, (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
 
     return wandTracks
 
@@ -274,7 +279,7 @@ def RemoveBackground():
     """
     Thread for removing background
     """
-    global frame, frame_no_background, IsNewFrame, IsNewFrameNoBackground
+    global frame, frame_no_background, IsNewFrame, IsNewFrameNoBackground, NewFrameNoBackground
 
     fgbg = cv2.createBackgroundSubtractorMOG2()
     t = threading.current_thread()
@@ -290,8 +295,8 @@ def RemoveBackground():
             IsNewFrameNoBackground = True
 
             if (IsShowBackgroundRemoved):
-                    frameNoBackgroundWithCounts = AddIterationsPerSecText(frame_no_background.copy(), noBackgroundCps.countsPerSec())
-                    cv2.imshow("BackgroundRemoved", frameNoBackgroundWithCounts)
+                frameNoBackgroundWithCounts = AddIterationsPerSecText(frame_no_background.copy(), noBackgroundCps.countsPerSec())
+                NewFrameNoBackground = frameNoBackgroundWithCounts
         else:
             time.sleep(0.001)
 
@@ -299,7 +304,7 @@ def CalculateThreshold():
     """
     Thread for calculating frame threshold
     """
-    global frame, frame_no_background, frameThresh, IsNewFrame, IsNewFrameNoBackground, IsNewFrameThreshold
+    global frame, frame_no_background, frameThresh, IsNewFrame, IsNewFrameNoBackground, IsNewFrameThreshold, NewFrameThreshold
 
     t = threading.current_thread()
     thresholdValue = 240
@@ -313,12 +318,10 @@ def CalculateThreshold():
                 IsNewFrame = False
                 frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            ret, frameThresh = cv2.threshold(frame_gray, thresholdValue, 255, cv2.THRESH_BINARY);
-
+            ret, frameThresh = cv2.threshold(frame_gray, thresholdValue, 255, cv2.THRESH_BINARY)
             IsNewFrameThreshold = True
             if (IsShowThreshold):
-                    frameThreshWithCounts = AddIterationsPerSecText(frameThresh.copy(), thresholdCps.countsPerSec())
-                    cv2.imshow("Threshold", frameThreshWithCounts)
+                NewFrameThreshold = AddIterationsPerSecText(frameThresh.copy(), thresholdCps.countsPerSec())
         else:
             time.sleep(0.001)
 
@@ -368,7 +371,6 @@ def ProcessData():
            
                 else:
                     # No Points were tracked, check for a pattern and start searching for wands again
-                    #wandTracks = CheckForPattern(wandTracks, localFrameThresh)
                     wandTracks = []
                     findNewWands = True
             
@@ -421,14 +423,12 @@ videoCapture = cv2.VideoCapture(videoSource)
 while True:
     # Get most recent frame
     ret, localFrame = videoCapture.read()
-
     if (ret):
         frame = localFrame.copy()
 
         # If successful, flip the frame and set the Flag for the next process to take over
         cv2.flip(frame, 1, frame) # Flipping the frame is done so the spells look like what we expect, instead of the mirror image
         IsNewFrame = True
-
         if (IsDebugFps):
             inputFrameCount = inputFrameCount + 1
             
@@ -444,13 +444,23 @@ while True:
         if (IsShowOriginal):
             frameWithCounts = AddIterationsPerSecText(frame.copy(), originalCps.countsPerSec())
             cv2.imshow("Original", frameWithCounts)
-        
+        if (IsShowBackgroundRemoved and IsNewFrameNoBackground):
+            cv2.imshow("BackgroundRemoved", NewFrameNoBackground)
+        if (IsShowThreshold and IsNewFrameThreshold):
+            cv2.imshow("Threshold", NewFrameThreshold)
+        if (IsShowOutput and IsNewWandFrameOutput):
+            cv2.imshow("Output", NewWandFrameOutput)
+            IsNewWandFrameOutput: False
+
     elif not ret:
         # If an error occurred, try initializing the video capture again
         videoCapture = cv2.VideoCapture(videoSource)
 
     # Check for ESC key, if pressed shut everything down
-    if (cv2.waitKey(1) is 27):
+    k = cv2.waitKey(1) & 0XFF
+    if k == 27 :
+        cv2.destroyAllWindows()
+        videoCapture.release()
         break
 
 # Shutdown PyPotter
@@ -464,4 +474,3 @@ ProcessDataThread.do_run = False
 CalculateThresholdThread.join()
 ProcessDataThread.join()
 
-cv2.destroyAllWindows()
